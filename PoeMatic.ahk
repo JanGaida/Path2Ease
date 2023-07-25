@@ -29,6 +29,7 @@
 ;                            	                 License: Apache License, Version 2.0
 ;
 ;                                           Useful Links:
+;                                                   Repo: https://github.com/JanGaida/PoeMatic
 ;                                          Documentation: https://www.autohotkey.com/docs/v2/
 ;                                       List of ahk-keys: https://www.autohotkey.com/docs/v2/KeyList.htm
 ;
