@@ -1,0 +1,4 @@
+# Ignore my scripts ;-)
+*.ahk
+!ExampleConfig.ahk
+!PoeMatic.ahk
