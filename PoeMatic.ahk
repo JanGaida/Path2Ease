@@ -397,7 +397,7 @@ Loop {
 		; AutoFire
 		if (
 			Enabled_AutoFire 
-			&& (Enabled_AutoMove || (GetKeyState(AutoFire_BoundKey))
+			&& (Enabled_AutoMove || (GetKeyState("LButton")))
 		){
 			; Initalize?
 			if (!Initalized_AutoFire) {	
