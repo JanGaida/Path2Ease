@@ -110,8 +110,12 @@ AutoFireTrackedKeys.Push "t"
 ;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  |         Variable         |                             Description                              |          Type          |                   Example                   |
 ;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
-;  | Input_AutoMove           | The toggle-key used for this                                         | KEY                    | Input_AutoMove := "XButton2"                |
+;  | Input_AutoMove           | The toggle-key used for this                                         | KEY                    | Input_AutoMove := "XButton1"                |
+;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
+;  | Input_InterupAutoMove    | The toggle-key used for this                                         | KEY                    | Input_AutoMove := "XButton2"                |
+;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  | SleepMsOnClick_AutoMove  | Sleeptimer when AutoMove has been interupted by LMB (in ms)          | NUMBER                 | SleepMsOnClick_AutoMove := 666              |
+;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  | IncludeAutoFire_AutoMove | Wether to include AutoFire while AutoMove is enabled                 | BOOL                   | IncludeAutoFire_AutoMove := True            |
 ;  |                          | (can be toggled independently)                                       |                        |                                             |
 ;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
@@ -120,8 +124,11 @@ AutoFireTrackedKeys.Push "t"
 
 
 ; The trigger-key which enables AutoMove
-Input_AutoMove := "XButton2" ; == Mousebutton-Next
+Input_AutoMove := "XButton1" ; == Mousebutton-Back
 ;Input_AutoMove := "~<!LButton Up"
+
+; The trigger-key to temporary 
+Input_InterupAutoMove := "XButton2" ; == Mousebutton-Next
 
 ; Sleeptimer when AutoMove has been interupted by LMB (in milliseconds)
 SleepMsOnClick_AutoMove := 666

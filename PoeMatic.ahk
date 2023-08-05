@@ -152,8 +152,12 @@ Hk_AutoFire_Tracking(key) {
 ;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  |         Variable         |                             Description                              |          Type          |                   Example                   |
 ;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
-;  | Input_AutoMove           | The toggle-key used for this                                         | KEY                    | Input_AutoMove := "XButton2"                |
+;  | Input_AutoMove           | The toggle-key used for this                                         | KEY                    | Input_AutoMove := "XButton1"                |
+;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
+;  | Input_InterupAutoMove    | The toggle-key used for this                                         | KEY                    | Input_AutoMove := "XButton2"                |
+;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  | SleepMsOnClick_AutoMove  | Sleeptimer when AutoMove has been interupted by LMB (in ms)          | NUMBER                 | SleepMsOnClick_AutoMove := 666              |
+;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  | IncludeAutoFire_AutoMove | Wether to include AutoFire while AutoMove is enabled                 | BOOL                   | IncludeAutoFire_AutoMove := True            |
 ;  |                          | (can be toggled independently)                                       |                        |                                             |
 ;  +--------------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
@@ -174,6 +178,9 @@ Hk_AutoMove(*) {
 	global Enabled_AutoFire
 	global Initalized_AutoFire
 	global InterceptUntil_AutoMove
+	global Interupted_AutoMove
+	global Input_InterupAutoMove
+	
 	; Toggle
 	Enabled_AutoMove := !Enabled_AutoMove
 	; AutoFire?
@@ -187,7 +194,12 @@ Hk_AutoMove(*) {
 	}
 	; Act
 	if (Enabled_AutoMove) {
-		Click "Down"
+		if (!Interupted_AutoMove) {
+			Click "Down"
+		} else {
+			KeyWait Input_InterupAutoMove
+			Click "Down"
+		}
 	} else {
 		InterceptUntil_AutoMove := 0
 		Click "Up"
@@ -196,7 +208,10 @@ Hk_AutoMove(*) {
 
 HotIfWinActive "ahk_exe PathOfExile.exe"
 ~LButton:: {
+	global Enabled_AutoMove
 	global InterceptUntil_AutoMove
+	global SleepMsOnClick_AutoMove
+	
 	if (Enabled_AutoMove) {
 		InterceptUntil_AutoMove := A_TickCount + SleepMsOnClick_AutoMove
 		Click "Up"
@@ -205,11 +220,40 @@ HotIfWinActive "ahk_exe PathOfExile.exe"
 
 HotIfWinActive "ahk_exe PathOfExile.exe"
 ~LButton Up:: {
+	global Enabled_AutoMove
+	global InterceptUntil_AutoMove
+	global Interupted_AutoMove
+	global Input_InterupAutoMove
+	
 	if (Enabled_AutoMove && InterceptUntil_AutoMove == 0) {
-		Click "Down"
+		if (!Interupted_AutoMove) {
+			Click "Down"
+		} else {
+			KeyWait Input_InterupAutoMove
+			Click "Down"
+		}
 	}
 }
 
+Interupted_AutoMove := False
+
+HotIfWinActive "ahk_exe PathOfExile.exe"
+Hotkey Input_InterupAutoMove, Hk_InteruptTemporaryAutoMove
+Hk_InteruptTemporaryAutoMove(*) {
+	global Interupted_AutoMove
+	global Input_InterupAutoMove
+	global Enabled_AutoMove
+	
+	Interupted_AutoMove := True
+	if (Enabled_AutoMove) {
+		Click "Up"
+	}
+	KeyWait Input_InterupAutoMove
+	Interupted_AutoMove := False
+	if (Enabled_AutoMove) {
+		Click "Down"
+	}
+}
 
 
 ;=============================================================================================================================================================================
@@ -374,11 +418,13 @@ Loop {
 	global Enabled_AutoMove
 	global InterceptUntil_AutoMove
 	
-	if (WinActive("Path of Exile") ) {
-		global InterceptUntil_AutoMove
+	global Interupted_AutoMove
+	global Input_InterupAutoMove
+	
+	if (WinActive("Path of Exile")) {
 		_A_TickCount := A_TickCount
 		; AutoMove
-		if (Enabled_AutoMove) {
+		if (Enabled_AutoMove && !Interupted_AutoMove) {
 			; Correct LButton?
 			if (InterceptUntil_AutoMove == 0) {
 				if (!GetKeyState("LButton")) {
@@ -386,7 +432,7 @@ Loop {
 				}
 			}
 			; Restart after inception?
-			if (InterceptUntil_AutoMove < _A_TickCount) {
+			else if (InterceptUntil_AutoMove < _A_TickCount) {
 				InterceptUntil_AutoMove := 0
 				if (!GetKeyState("LButton")) {
 					Click "Down"
@@ -397,8 +443,8 @@ Loop {
 		; AutoFire
 		if (
 			Enabled_AutoFire 
-			&& (Enabled_AutoMove || (GetKeyState("LButton")))
-		){
+			&& (Enabled_AutoMove || GetKeyState("LButton"))
+		) {
 			; Initalize?
 			if (!Initalized_AutoFire) {	
 				AutoFireKeys_Tracking := Array()
