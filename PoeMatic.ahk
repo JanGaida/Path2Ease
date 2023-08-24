@@ -276,31 +276,121 @@ Hk_InteruptTemporaryAutoMove(*) {
 ;  | Input_SingleKey     | The trigger-key which triggers all specified keys                    | KEY                    | Input_SingleKey:= "<^w"                     |
 ;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  | SingleKeys          | The keys to trigger with the Input_SingleKey                         | ARRAY<New_SingleKeys>  | SingleKeys := Array()                       |
-;  | -                   | New_SingleKey ( key , inital_delay_in_seconds )                      | -                      | SingleKeys.Push New_SingleKey("<^e")        |
+;  |                     | New_SingleKey ( key , inital_delay_in_seconds )                      | -                      | SingleKeys.Push New_SingleKey("<^e")        |
+;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
+;  | RootSwapKey_PosX    | The X-Coordinate of the skill-key to temporarily swap                | INTEGER                | RootSwapKey_PosX := 2226                    |
+;  | RootSwapKey_PosY    | The Y-Coordinate of the skill-key to temporarily swap                | INTEGER                | RootSwapKey_PosY := 1398                    |
+;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
+;  | RootSkill_PosX      | The X-Coordinate of the original skill-key to swap back to           | INTEGER                | RootSkill_PosX := 2015                      |
+;  | RootSkill_PosY      | The Y-Coordinate of the original skill-key to swap back to           | INTEGER                | RootSkill_PosY := 948                       |
 ;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;
 ;=============================================================================================================================================================================
 ;
 ; How long to sleep during
-SleepBtw_SingleKeys := 10
+SleepBtw_SingleKeys := 5
+SleepBtw_MouseActions := 40
+
+; AuraChange
+RootSwapKey_PosX := 0
+RootSwapKey_PosY := 0
+RootSkill_PosX := 0
+RootSkill_PosY := 0
+
 ; Helper
-New_SingleKey(key, inital_delay:=0) {
+New_SingleKey(key, inital_delay:=0, changeSkill:=false, posX:=0, posY:=0) {
 	it := Map()
 	it["K"] := key
 	it["I"] := inital_delay * 1000
+	
+	it["C"] := changeSkill
+	it["X"] := posX
+	it["Y"] := posY
 	return it
 }
 
 HotIfWinActive "ahk_exe PathOfExile.exe"
 Hotkey Input_SingleKey, Hk_SingleKey
 Hk_SingleKey(*) {
-	for singleAuraKey in SingleKeys {
-		if (singleAuraKey["I"] > 0) {
-			Sleep singleAuraKey["I"]
-		}
-		Send singleAuraKey["K"]
-		Sleep SleepBtw_SingleKeys
+	global RootSwapKey_PosX
+	global RootSwapKey_PosY
+	global RootSkill_PosX
+	global RootSkill_PosY
+
+	didChangeAuraSkill := false
+	ogMouseX := 0
+	ogMouseY := 0
+
+	BlockInput True
+	holdControl := False
+	
+	if (GetKeyState("Control")) {
+		holdControl := True
+		Send "{Control down}"
 	}
+	
+		
+	for singleAuraKey in SingleKeys {
+	 	
+	 	if (singleAuraKey["I"] > 0) {
+	 		Sleep singleAuraKey["I"]
+	 	}
+	 		
+	 	if (singleAuraKey["C"]) {
+			if (holdControl) {
+				Send "{Control down}"
+			}
+			
+	 		; track og-mouse-position
+	 		if (!didChangeAuraSkill) {
+	 			MouseGetPos &xpos, &ypos
+	 			ogMouseX := xpos
+	 			ogMouseY := ypos
+	 			didChangeAuraSkill := true
+	 		}
+			; go to slot in skill-bar
+			MouseMove RootSwapKey_PosX, RootSwapKey_PosY
+			Sleep SleepBtw_MouseActions
+			Click
+			; go to the new skill
+			MouseMove singleAuraKey["X"], singleAuraKey["Y"]
+			Sleep SleepBtw_MouseActions
+			Click
+			Sleep SleepBtw_MouseActions
+			; press the key
+			Send singleAuraKey["K"]
+			
+			
+	 	} else {
+		
+			; press the key
+			Send singleAuraKey["K"]
+			Sleep SleepBtw_SingleKeys
+	 	}
+		
+	}
+	
+	; Revert aura-skill-changes
+	if (didChangeAuraSkill) {
+		if (holdControl) {
+			Send "{Control down}"
+		}
+		; go to slot in skill-bar
+		MouseMove RootSwapKey_PosX, RootSwapKey_PosY
+		Sleep SleepBtw_MouseActions
+		Click
+		; go to the root skill
+		MouseMove RootSkill_PosX, RootSkill_PosY
+		Sleep SleepBtw_MouseActions
+		Click
+	}
+	
+	; Undo all conditions
+	if (holdControl) {
+		Send "{Control up}"
+	}
+	MouseMove ogMouseX, ogMouseY
+	BlockInput False
 }
 
 
@@ -427,6 +517,7 @@ Loop {
 		if (Enabled_AutoMove && !Interupted_AutoMove) {
 			; Correct LButton?
 			if (InterceptUntil_AutoMove == 0) {
+				;Click "Down"
 				if (!GetKeyState("LButton")) {
 					Click "Down"
 				}
@@ -471,6 +562,10 @@ Loop {
 				idx := idx + 1
 			}
 		}
+	}
+	else 
+	{
+		WinWaitActive "Path of Exile"
 	}
 	; To keep cpu-usage low
 	Sleep MainLoop_Sleep

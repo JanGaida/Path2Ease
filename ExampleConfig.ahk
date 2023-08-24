@@ -158,7 +158,13 @@ IncludeAutoFire_AutoMove := True
 ;  | Input_SingleKey     | The trigger-key which triggers all specified keys                    | KEY                    | Input_SingleKey:= "<^w"                     |
 ;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;  | SingleKeys          | The keys to trigger with the Input_SingleKey                         | ARRAY<New_SingleKeys>  | SingleKeys := Array()                       |
-;  | -                   | New_SingleKey ( key , inital_delay_in_seconds )                      | -                      | SingleKeys.Push New_SingleKey("<^e")        |
+;  |                     | New_SingleKey ( key , inital_delay_in_seconds )                      | -                      | SingleKeys.Push New_SingleKey("<^e")        |
+;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
+;  | RootSwapKey_PosX    | The X-Coordinate of the skill-key to temporarily swap                | INTEGER                | RootSwapKey_PosX := 2226                    |
+;  | RootSwapKey_PosY    | The Y-Coordinate of the skill-key to temporarily swap                | INTEGER                | RootSwapKey_PosY := 1398                    |
+;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
+;  | RootSkill_PosX      | The X-Coordinate of the original skill-key to swap back to           | INTEGER                | RootSkill_PosX := 2015                      |
+;  | RootSkill_PosY      | The Y-Coordinate of the original skill-key to swap back to           | INTEGER                | RootSkill_PosY := 948                       |
 ;  +---------------------+----------------------------------------------------------------------+------------------------+---------------------------------------------+
 ;
 ;=============================================================================================================================================================================
@@ -166,13 +172,22 @@ IncludeAutoFire_AutoMove := True
 ; The trigger-key which triggers all specified keys
 Input_SingleKey:= "<^w" ; == Ctrl + W
 
+; The skill slot @ <^t
+RootAuraKey_PosX := 2226
+RootAuraKey_PosY := 1398
+
+; Jump back to HATRED @ <^t
+RootAuraSkill_PosX := 2015
+RootAuraSkill_PosY := 948
+
 ; Keys to concatinate when using the aura-key
 SingleKeys := Array()
 ; New_SingleKeys ( key , inital_delay_in_seconds )
-SingleKeys.Push New_SingleKey("<^w")
-SingleKeys.Push New_SingleKey("<^e")
-SingleKeys.Push New_SingleKey("<^r")
-SingleKeys.Push New_SingleKey("<^t")
+SingleKeys.Push New_SingleKey("<^w") ; = CLARITY
+SingleKeys.Push New_SingleKey("<^e") ; = VITALITY
+SingleKeys.Push New_SingleKey("<^r") ; = HERALD-ASH
+SingleKeys.Push New_SingleKey("<^t") ; = HERALD-ICE
+SingleKeys.Push New_SingleKey("<^t", 0, true, 1925, 850)  ; = PRECISION
 
 
 
