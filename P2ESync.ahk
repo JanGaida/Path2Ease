@@ -8,6 +8,13 @@ AppSettingsEncoding := "UTF-8"
 
 ; Keys
 SettingKeys := {
+    /* Profile */
+    P: "Profiles",
+    P_ProfileSettings: "ProfileSettings",
+    P_ProfileIndex: "Index",
+    P_ProfileName: "Name",
+    P_Description: "Description",
+    P_Created: "Created",
 
     /* AutoFire */
     AF: "AutoFire",
@@ -38,50 +45,60 @@ SettingKeys := {
     G_StartMinimized: "StartMinimized",
     G_CloseToTray: "CloseToTray",
     G_TargetedExe: "TargetedExe",
-    G_Beep: "Beep"
+    G_Beep: "Beep",
+    G_ActiveProfile: "ActiveProfile"
 }
 
 ; Data
 P2ESettings := {
     
-    AutoFire: {
-        Enable: 1,
-        BoundTo: "LButton",
-        Toggle: "F13",
-        Hotkeys: []
-        /*Hotkeys : [
-            { 
-                Active: 0,
-                Name: "Ability-1",
-                Hotkey: "T",
-                Cooldown: "1000",
-                Delay: "100"
+    Profiles: [
+        {
+            ProfileSettings: {
+                Name: "Default"
             },
-            { 
-                Active: 1,
-                Name: "Ability-2",
-                Hotkey: "T",
-                Cooldown: "1000",
-                Delay: "100"
-            }
-        ]*/
-    },
 
-    AutoMove: {
-        Enable: 1,
-        Hotkey: "LButton",
-        Toggle: "XButton1",
-        Interrupt: "XButton2",
-        Sleep: 500,
-        IncludeAutoFire: 1
-    },
+            AutoFire: {
+                Enable: 1,
+                BoundTo: "LButton",
+                Toggle: "F13",
+                Hotkeys: []
+                /*Hotkeys : [
+                    { 
+                        Active: 0,
+                        Name: "Ability-1",
+                        Hotkey: "T",
+                        Cooldown: "1000",
+                        Delay: "100"
+                    },
+                    { 
+                        Active: 1,
+                        Name: "Ability-2",
+                        Hotkey: "T",
+                        Cooldown: "1000",
+                        Delay: "100"
+                    }
+                ]*/
+            },
+        
+            AutoMove: {
+                Enable: 1,
+                Hotkey: "LButton",
+                Toggle: "XButton1",
+                Interrupt: "XButton2",
+                Sleep: 500,
+                IncludeAutoFire: 1
+            }
+        }
+    ],
 
     General: {
         Randomness: 80,
         StartMinimized: true,
         CloseToTray: true,
-        TargetedExe: "PathOfExile.exe",
-        Beep: true
+        TargetedExe: "Notepad.exe",
+        Beep: true,
+        ActiveProfile: 0
     }
 }
 Backup_P2ESettings := unset
@@ -92,55 +109,7 @@ SettingsContainsChanges()
     global Backup_P2ESettings
     global P2ESettings
 
-    /* AutoFire */
-    ; Enable
-    if (Backup_P2ESettings.AutoFire.Enable != P2ESettings.AutoFire.Enable)
-        return true
-    ; BoundTo
-    if (Backup_P2ESettings.AutoFire.BoundTo != P2ESettings.AutoFire.BoundTo)
-        return true
-    ; Toggle
-    if (Backup_P2ESettings.AutoFire.Toggle != P2ESettings.AutoFire.Toggle)
-        return true
-    ; Hotkeys
-    if (P2ESettings.AutoFire.Hotkeys.Length != Backup_P2ESettings.AutoFire.Hotkeys.Length)
-        return true
-    for key in P2ESettings.AutoFire.Hotkeys
-    {
-        backup_key := Backup_P2ESettings.AutoFire.Hotkeys[A_Index]
-        if (backup_key.Active != key.Active)
-            return true
-        if (backup_key.Name != key.Name)
-            return true
-        if (backup_key.Hotkey != key.Hotkey)
-            return true
-        if (backup_key.Cooldown != key.Cooldown)
-            return true
-        if (backup_key.Delay != key.Delay)
-            return true
-    }
-
-    /* AutoMove */
-    ; Enable
-    if (Backup_P2ESettings.AutoMove.Enable != P2ESettings.AutoMove.Enable)
-        return true
-    ; Hotkey
-    if (Backup_P2ESettings.AutoMove.Hotkey != P2ESettings.AutoMove.Hotkey)
-        return true
-    ; Toggle
-    if (Backup_P2ESettings.AutoMove.Toggle != P2ESettings.AutoMove.Toggle)
-        return true
-    ; Interrupt
-    if (Backup_P2ESettings.AutoMove.Interrupt != P2ESettings.AutoMove.Interrupt)
-        return true
-    ; Sleep
-    if (Backup_P2ESettings.AutoMove.Sleep != P2ESettings.AutoMove.Sleep)
-        return true
-    ; Sleep
-    if (Backup_P2ESettings.AutoMove.IncludeAutoFire != P2ESettings.AutoMove.IncludeAutoFire)
-        return true
-
-    /* General */
+    /* # General # */
     ; Randomness
     if (Backup_P2ESettings.General.Randomness != P2ESettings.General.Randomness)
         return true
@@ -156,6 +125,71 @@ SettingsContainsChanges()
     ; Beep
     if (Backup_P2ESettings.General.Beep != P2ESettings.General.Beep)
         return true
+    ; ActiveProfile
+    if (Backup_P2ESettings.General.ActiveProfile != P2ESettings.General.ActiveProfile)
+        return true
+    ; Length match
+    if Backup_P2ESettings.Profiles.Length != P2ESettings.Profiles.Length
+        return true
+
+    ; Loop all
+    for Profile in P2ESettings.Profiles
+    {
+        Backup_Profile := Backup_P2ESettings.Profiles[A_Index]
+
+        /* # ProfileSettings # */
+        ; Name
+        if (Backup_Profile.ProfileSettings.Name != Profile.ProfileSettings.Name)
+            return true
+
+        /* # AutoFire # */
+        ; Enable
+        if (Backup_Profile.AutoFire.Enable != Profile.AutoFire.Enable)
+            return true
+        ; BoundTo
+        if (Backup_Profile.AutoFire.BoundTo != Profile.AutoFire.BoundTo)
+            return true
+        ; Toggle
+        if (Backup_Profile.AutoFire.Toggle != Profile.AutoFire.Toggle)
+            return true
+        ; Hotkeys
+        if (Backup_Profile.AutoFire.Hotkeys.Length != Profile.AutoFire.Hotkeys.Length)
+            return true
+        for key in Profile.AutoFire.Hotkeys
+        {
+            Backup_Key := Backup_Profile.AutoFire.Hotkeys[A_Index]
+            if (Backup_Key.Active != key.Active)
+                return true
+            if (Backup_Key.Name != key.Name)
+                return true
+            if (Backup_Key.Hotkey != key.Hotkey)
+                return true
+            if (Backup_Key.Cooldown != key.Cooldown)
+                return true
+            if (Backup_Key.Delay != key.Delay)
+                return true
+        }
+
+        /* # AutoMove # */
+        ; Enable
+        if (Backup_Profile.AutoMove.Enable != Profile.AutoMove.Enable)
+            return true
+        ; Hotkey
+        if (Backup_Profile.AutoMove.Hotkey != Profile.AutoMove.Hotkey)
+            return true
+        ; Toggle
+        if (Backup_Profile.AutoMove.Toggle != Profile.AutoMove.Toggle)
+            return true
+        ; Interrupt
+        if (Backup_Profile.AutoMove.Interrupt != Profile.AutoMove.Interrupt)
+            return true
+        ; Sleep
+        if (Backup_Profile.AutoMove.Sleep != Profile.AutoMove.Sleep)
+            return true
+        ; SleepIncludeAutoFire
+        if (Backup_Profile.AutoMove.IncludeAutoFire != Profile.AutoMove.IncludeAutoFire)
+            return true
+    }
 
     ; all checks passed
     return false
@@ -172,7 +206,7 @@ SaveSettings()
         return
 
     ; determine the output
-    appsettingsString := JsonSerialize(MapSettings(),4,1)
+    appsettingsString := JsonSerialize(MapifySettings(),4,1)
 
     ; ensure to append to a new file
     if (FileExist(AppSettingsPath))
@@ -188,230 +222,291 @@ LoadSettings()
     global Backup_P2ESettings
     global P2ESettings
 
+    ; Check if settings exists
+    if (FileExist(AppSettingsPath))
+    {
+        ; Read and objectify the file
+        appsettingsStr := FileRead(AppSettingsPath, AppSettingsEncoding)
+        ObjectifySettings(JsonDeserialize(&appsettingsStr))
+        ; Use as backup
+        Backup_P2ESettings := P2ESettings
+        ; And deserialize again
+        ObjectifySettings(JsonDeserialize(&appsettingsStr))
+    }
+    else
+    {
+        LoadDefaultSettings()
+    }
+
+    ; Helper to load default-settings
     LoadDefaultSettings()
     {
         global Backup_P2ESettings
         global P2ESettings
 
         ; Load default settings
-        UnmapSettings(Map())
+        ObjectifySettings(Map())
         ; Use as backup
         Backup_P2ESettings := P2ESettings
         ; And deserialize again
-        UnmapSettings(Map())
-    }
-
-    ; Check if settings exists
-    if (FileExist(AppSettingsPath))
-    {
-        ;try
-        ;{
-            ; Read and unmap the file
-            appsettingsStr := FileRead(AppSettingsPath, AppSettingsEncoding)
-            UnmapSettings(JsonDeserialize(&appsettingsStr))
-            ; Use as backup
-            Backup_P2ESettings := P2ESettings
-            ; And deserialize again
-            UnmapSettings(JsonDeserialize(&appsettingsStr))
-        ;}
-        ;catch
-        ;
-        ;    LoadDefaultSettings()
-        ;}
-    }
-    else
-    {
-        LoadDefaultSettings()
+        ObjectifySettings(Map())
     }
 }
 
 ; Creates a settings-obj from the 'root'-map
-UnmapSettings(root)
+ObjectifySettings(root)
 {
     global P2ESettings
     global SettingKeys
 
     P2ESettings := Object()
 
-    /* AutoFire */
-    P2ESettings.AutoFire := Object()
-    ; Root
-    if (root.Has(SettingKeys.AF))
-        rootAutoFire := root[SettingKeys.AF]
-    else 
-        rootAutoFire := Map()
-    ; Enable
-    if (rootAutoFire.Has(SettingKeys.AF_Enable))
-        P2ESettings.Autofire.Enable := rootAutoFire[SettingKeys.AF_Enable]
-    else 
-        P2ESettings.Autofire.Enable := 0
-    ; BoundTo
-    if (rootAutoFire.Has(SettingKeys.AF_BoundTo))
-        P2ESettings.Autofire.BoundTo := rootAutoFire[SettingKeys.AF_BoundTo]
-    else 
-        P2ESettings.Autofire.BoundTo := "LButton"
-    ; Toggle
-    if (rootAutoFire.Has(SettingKeys.AF_Toggle))
-        P2ESettings.Autofire.Toggle := rootAutoFire[SettingKeys.AF_Toggle]
-    else 
-        P2ESettings.Autofire.Toggle := "F13"
-    ; Hotkeys
-    if (rootAutoFire.Has(SettingKeys.AF_Hotkeys))
+    /* # Profiles # */
+    P2ESettings.Profiles := Array()
+    if (root.Has(SettingKeys.P))
     {
-        Hotkeys := Array()
-        for obj in rootAutoFire[SettingKeys.AF_Hotkeys]
+        for profile in root[SettingKeys.P]
         {
-            Hotkeys.Push(
-                { 
-                    Active: obj[SettingKeys.AFHK_Active],
-                    Name: obj[SettingKeys.AFHK_Name],
-                    Hotkey: obj[SettingKeys.AFHK_Hotkey],
-                    Cooldown: obj[SettingKeys.AFHK_Cooldown],
-                    Delay: obj[SettingKeys.AFHK_Delay]
+            profileSettings := Object()
+            autoFire := Object()
+            autoMove := Object()
+
+            /* # ProfileSettings # */
+            if (profile.Has(SettingKeys.P_ProfileSettings))
+            {
+                _profileSettings := profile[SettingKeys.P_ProfileSettings]
+
+                ; Name
+                profileSettings.Name := GrabValue(_profileSettings, SettingKeys.P_ProfileName, "Profile (default)")
+                ; Description
+                profileSettings.Description := GrabValue(_profileSettings, SettingKeys.P_Description, "")
+                ; Created
+                profileSettings.Created := GrabValue(_profileSettings, SettingKeys.P_Created, A_DD "." A_MM "." A_YYYY)
+            }
+            else
+            {
+                ; Defaults
+                profileSettings.Name := "Profile (default)"
+                profileSettings.Description := ""
+                profileSettings.Created := A_DD "." A_MM "." A_YYYY
+            }
+
+            /* # AutoFire # */
+            if (profile.Has(SettingKeys.AF))
+            {
+                _autoFire := profile[SettingKeys.AF]
+
+                ; Enable
+                autoFire.Enable := GrabValue(_autoFire, SettingKeys.AF_Enable, false)
+                ; BoundTo
+                autoFire.BoundTo := GrabValue(_autoFire, SettingKeys.AF_BoundTo, "LButton")
+                ; Toggle
+                autoFire.Toggle := GrabValue(_autoFire, SettingKeys.AF_Toggle, "F13")
+                ; Hotkeys
+                autoFire.Hotkeys := Array()
+                if (_autoFire.Has(SettingKeys.AF_Hotkeys))
+                {
+                    for afHotkey in _autoFire[SettingKeys.AF_Hotkeys]
+                    {
+                        autoFire.Hotkeys.Push(
+                            { 
+                                Active: GrabValue(afHotkey, SettingKeys.AFHK_Active, false),
+                                Name: GrabValue(afHotkey, SettingKeys.AFHK_Name, "Ability-1"),
+                                Hotkey: GrabValue(afHotkey, SettingKeys.AFHK_Hotkey, "^+F1"),
+                                Cooldown: GrabValue(afHotkey, SettingKeys.AFHK_Cooldown, "5000"),
+                                Delay: GrabValue(afHotkey, SettingKeys.AFHK_Delay, "0")
+                            }
+                        )
+                    }
+                }
+            }
+            else
+            {
+                ; Defaults
+                autoFire.Enable := false
+                autoFire.BoundTo := "LButton"
+                autoFire.Toggle := "F13"
+                autoFire.Hotkeys := Array()
+            }
+
+            /* # AutoMove # */
+            if (profile.Has(SettingKeys.AM))
+            {
+                _autoMove := profile[SettingKeys.AM]
+
+                ; Enable
+                autoMove.Enable := GrabValue(_autoMove, SettingKeys.AM_Enable, false)
+                ; Hotkey
+                autoMove.Hotkey := GrabValue(_autoMove, SettingKeys.AM_Hotkey, "LButton")
+                ; IncludeAutoFire
+                autoMove.IncludeAutoFire := GrabValue(_autoMove, SettingKeys.AM_IncludeAutoFire, true)
+                ; Interrupt
+                autoMove.Interrupt := GrabValue(_autoMove, SettingKeys.AM_Interrupt, "XButton2")
+                ; Sleep
+                autoMove.Sleep := GrabValue(_autoMove, SettingKeys.AM_Sleep, "500")
+                ; Toggle
+                autoMove.Toggle := GrabValue(_autoMove, SettingKeys.AM_Toggle, "XButton1")
+            }
+            else
+            {
+                ; Defaults
+                autoMove.Enable := false
+                autoMove.Hotkey := "LButton"
+                autoMove.IncludeAutoFire := true
+                autoMove.Interrupt := "XButton2"
+                autoMove.Sleep := "500"
+                autoMove.Toggle := "XButton1"
+            }
+
+            ; Assemble
+            P2ESettings.Profiles.Push(
+                {
+                    ProfileSettings: profileSettings,
+                    AutoFire: autoFire,
+                    AutoMove: autoMove
                 }
             )
         }
     }
     else
     {
-        Hotkeys := Array()
+        P2ESettings.Profiles := Array()
+        P2ESettings.Profiles.Push(
+            {
+                ProfileSettings: {
+                    Name: "Default",
+                    Description: "",
+                    Created: A_DD "." A_MM "." A_YYYY
+                },
+                AutoFire: {
+                    Enable: false,
+                    BoundTo: "LButton",
+                    Toggle: "F13",
+                    Hotkeys: Array()
+                },
+                AutoMove: {
+                    Enable: false,
+                    Hotkey: "LButton",
+                    IncludeAutoFire: true,
+                    Interrupt: "XButton2",
+                    Sleep: "500",
+                    Toggle: "XButton1"
+                }
+            }
+        )
     }
-    P2ESettings.Autofire.Hotkeys := Hotkeys
 
-    /* AutoMove */
-    P2ESettings.AutoMove := Object()
-    ; Root
-    if (root.Has(SettingKeys.AM))
-        rootAutoFire := root[SettingKeys.AM]
-    else 
-        rootAutoFire := Map()
-    ; Enable
-    if (rootAutoFire.Has(SettingKeys.AM_Enable))
-        P2ESettings.AutoMove.Enable := rootAutoFire[SettingKeys.AM_Enable]
-    else 
-        P2ESettings.AutoMove.Enable := 1
-    ; Hotkey
-    if (rootAutoFire.Has(SettingKeys.AM_Hotkey))
-        P2ESettings.AutoMove.Hotkey := rootAutoFire[SettingKeys.AM_Hotkey]
-    else 
-        P2ESettings.AutoMove.Hotkey := "LButton"
-    ; Toggle
-    if (rootAutoFire.Has(SettingKeys.AM_Toggle))
-        P2ESettings.AutoMove.Toggle := rootAutoFire[SettingKeys.AM_Toggle]
-    else 
-        P2ESettings.AutoMove.Toggle := "XButton1"
-    ; Interrupt
-    if (rootAutoFire.Has(SettingKeys.AM_Interrupt))
-        P2ESettings.AutoMove.Interrupt := rootAutoFire[SettingKeys.AM_Interrupt]
-    else 
-        P2ESettings.AutoMove.Interrupt := "XButton2"
-    ; Sleep
-    if (rootAutoFire.Has(SettingKeys.AM_Sleep))
-        P2ESettings.AutoMove.Sleep := rootAutoFire[SettingKeys.AM_Sleep]
-    else 
-        P2ESettings.AutoMove.Sleep := "500"
-    ; IncludeAutoFire
-    if (rootAutoFire.Has(SettingKeys.AM_IncludeAutoFire))
-        P2ESettings.AutoMove.IncludeAutoFire := rootAutoFire[SettingKeys.AM_IncludeAutoFire]
-    else 
-        P2ESettings.AutoMove.IncludeAutoFire := 1
-
-    /* General */
+    /* # General # */
     P2ESettings.General := Object()
-    ; Root
     if (root.Has(SettingKeys.G))
-        rootGeneral := root[SettingKeys.G]
-    else 
-        rootGeneral := Map()
-    ; IncludeAutoFire
-    if (rootGeneral.Has(SettingKeys.G_Randomness))
-        P2ESettings.General.Randomness := rootGeneral[SettingKeys.G_Randomness]
-    else 
-        P2ESettings.General.Randomness := 80
-    ; StartMinimized
-    if (rootGeneral.Has(SettingKeys.G_StartMinimized))
-        P2ESettings.General.StartMinimized := rootGeneral[SettingKeys.G_StartMinimized]
-    else 
-        P2ESettings.General.StartMinimized := false
-    ; CloseToTray
-    if (rootGeneral.Has(SettingKeys.G_CloseToTray))
-        P2ESettings.General.CloseToTray := rootGeneral[SettingKeys.G_CloseToTray]
-    else 
-        P2ESettings.General.CloseToTray := false
-    ; TargetedExe
-    if (rootGeneral.Has(SettingKeys.G_TargetedExe))
-        P2ESettings.General.TargetedExe := rootGeneral[SettingKeys.G_TargetedExe]
-    else 
-        P2ESettings.General.TargetedExe := "notepad.exe"
-    ; Beep
-    if (rootGeneral.Has(SettingKeys.G_Beep))
-        P2ESettings.General.Beep := rootGeneral[SettingKeys.G_Beep]
-    else 
+    {
+        _general := root[SettingKeys.G]
+
+        ; Beep
+        P2ESettings.General.Beep := GrabValue(_general, SettingKeys.G_Beep, true)
+        ; CloseToTray
+        P2ESettings.General.CloseToTray := GrabValue(_general, SettingKeys.G_CloseToTray, true)
+        ; Randomness
+        P2ESettings.General.Randomness := GrabValue(_general, SettingKeys.G_Randomness, 80)
+        ; StartMinimized
+        P2ESettings.General.StartMinimized := GrabValue(_general, SettingKeys.G_StartMinimized, false)
+        ; TargetedExe
+        P2ESettings.General.TargetedExe := GrabValue(_general, SettingKeys.G_TargetedExe, "Notepad.exe")
+        ; ActiveProfile
+        P2ESettings.General.ActiveProfile := GrabValue(_general, SettingKeys.G_ActiveProfile, 0)
+    }
+    else
+    {
+        ; Default
         P2ESettings.General.Beep := true
+        P2ESettings.General.CloseToTray := true
+        P2ESettings.General.Randomness := 80
+        P2ESettings.General.StartMinimized := false
+        P2ESettings.General.TargetedExe := "Notepad.exe"
+        P2ESettings.General.ActiveProfile := 1
+    }
+
     ; Finally
     return P2ESettings
 }
 
+; Grabs a value from a dict or the default-value
+GrabValue(dict, key, default)
+{
+    if (dict.Has(key))
+        return dict[key]
+    else
+        return default
+}
+
 ; Creates a map from the settings-obj
-MapSettings()
+MapifySettings()
 {
     global P2ESettings
     
     root := Map()
 
-    /* AutoFire */
-    ; Root
-    root[SettingKeys.AF] := Map()
-    ; Enable
-    root[SettingKeys.AF][SettingKeys.AF_Enable] := P2ESettings.Autofire.Enable
-    ; BoundTo
-    root[SettingKeys.AF][SettingKeys.AF_BoundTo] := P2ESettings.Autofire.BoundTo
-    ; Toggle
-    root[SettingKeys.AF][SettingKeys.AF_Toggle] := P2ESettings.Autofire.Toggle
-    ; Hotkeys
-    Hotkeys := Array()
-    for key in P2ESettings.AutoFire.Hotkeys
+    /* # Profiles # */
+    root[SettingKeys.P] := Array()
+    for profile in P2ESettings.Profiles
     {
-        obj := Map()
-        obj[SettingKeys.AFHK_Active] := key.Active
-        obj[SettingKeys.AFHK_Name] := key.Name
-        obj[SettingKeys.AFHK_Hotkey] := key.Hotkey
-        obj[SettingKeys.AFHK_Cooldown] := key.Cooldown
-        obj[SettingKeys.AFHK_Delay] := key.Delay
-        Hotkeys.Push(obj)
+        _profile := Map()
+
+        /* # ProfileSettings # */
+        _profile[SettingKeys.P_ProfileSettings] := Map()
+        _profile[SettingKeys.P_ProfileSettings][SettingKeys.P_ProfileName] := profile.ProfileSettings.Name
+        _profile[SettingKeys.P_ProfileSettings][SettingKeys.P_Description] := profile.ProfileSettings.Description
+        _profile[SettingKeys.P_ProfileSettings][SettingKeys.P_Created] := profile.ProfileSettings.Created
+
+        /* # AutoFire # */
+        _profile[SettingKeys.AF] := Map()
+        _profile[SettingKeys.AF][SettingKeys.AF_Enable] := profile.AutoFire.Enable
+        _profile[SettingKeys.AF][SettingKeys.AF_BoundTo] := profile.AutoFire.BoundTo
+        _profile[SettingKeys.AF][SettingKeys.AF_Toggle] := profile.AutoFire.Toggle
+        _hotkeys := Array()
+        for hotkey in profile.AutoFire.Hotkeys
+        {
+            _hotkey := Map()
+            _hotkey[SettingKeys.AFHK_Active] := hotkey.Active
+            _hotkey[SettingKeys.AFHK_Cooldown] := hotkey.Cooldown
+            _hotkey[SettingKeys.AFHK_Delay] := hotkey.Delay
+            _hotkey[SettingKeys.AFHK_Hotkey] := hotkey.Hotkey
+            _hotkey[SettingKeys.AFHK_Name] := hotkey.Name
+            _hotkeys.Push(_hotkey)
+        }
+        _profile[SettingKeys.AF][SettingKeys.AF_Hotkeys] := _hotkeys
+
+        /* # AutoMove # */
+        _profile[SettingKeys.AM] := Map()
+        _profile[SettingKeys.AM][SettingKeys.AM_Enable] := profile.AutoMove.Enable
+        _profile[SettingKeys.AM][SettingKeys.AM_Hotkey] := profile.AutoMove.Hotkey
+        _profile[SettingKeys.AM][SettingKeys.AM_IncludeAutoFire] := profile.AutoMove.IncludeAutoFire
+        _profile[SettingKeys.AM][SettingKeys.AM_Interrupt] := profile.AutoMove.Interrupt
+        _profile[SettingKeys.AM][SettingKeys.AM_Sleep] := profile.AutoMove.Sleep
+        _profile[SettingKeys.AM][SettingKeys.AM_Toggle] := profile.AutoMove.Toggle
+
+        ; Finally
+        root[SettingKeys.P].Push(_profile)
     }
-    root[SettingKeys.AF][SettingKeys.AF_Hotkeys] := Hotkeys
 
-    /* AutoMove */
-    ; Root
-    root[SettingKeys.AM] := Map()
-    ; Hotkey
-    root[SettingKeys.AM][SettingKeys.AM_Hotkey] := P2ESettings.AutoMove.Hotkey
-    ; Enable
-    root[SettingKeys.AM][SettingKeys.AM_Enable] := P2ESettings.AutoMove.Enable
-    ; Toggle
-    root[SettingKeys.AM][SettingKeys.AM_Toggle] := P2ESettings.AutoMove.Toggle
-    ; Interrupt
-    root[SettingKeys.AM][SettingKeys.AM_Interrupt] := P2ESettings.AutoMove.Interrupt
-    ; Sleep
-    root[SettingKeys.AM][SettingKeys.AM_Sleep] := P2ESettings.AutoMove.Sleep
-    ; IncludeAutoFire
-    root[SettingKeys.AM][SettingKeys.AM_IncludeAutoFire] := P2ESettings.AutoMove.IncludeAutoFire
-
-    /* General */
+    /* # General # */
     ; Root
     root[SettingKeys.G] := Map()
-    ; IncludeAutoFire
     root[SettingKeys.G][SettingKeys.G_Randomness] := P2ESettings.General.Randomness
-    ; StartMinimized
+    root[SettingKeys.G][SettingKeys.G_ActiveProfile] := P2ESettings.General.ActiveProfile
     root[SettingKeys.G][SettingKeys.G_StartMinimized] := P2ESettings.General.StartMinimized
-    ; CloseToTray
     root[SettingKeys.G][SettingKeys.G_CloseToTray] := P2ESettings.General.CloseToTray
-    ; TargetedExe
     root[SettingKeys.G][SettingKeys.G_TargetedExe] := P2ESettings.General.TargetedExe
-    ; Beep
     root[SettingKeys.G][SettingKeys.G_Beep] := P2ESettings.General.Beep
 
     ; Finally
     return root
+}
+
+GetActiveProfile()
+{
+    if (P2ESettings.General.ActiveProfile > 0)
+        return P2ESettings.Profiles[P2ESettings.General.ActiveProfile]
+    else
+        return P2ESettings.Profiles[1]
 }

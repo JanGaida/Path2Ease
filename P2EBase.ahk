@@ -60,7 +60,7 @@ BootFeatures()
 
 /* # HELPER # */
 
-; Searchs for the exe
+; Searches for the exe
 FindExeHwnd()
 {
     global ExeHwnd
@@ -133,7 +133,6 @@ HookToWindowEvents()
         {
             ; A window moved into the foreground
             case EVENT_SYSTEM_FOREGROUND:
-                
                 if (IsSet(ExeHwnd))
                 {
                     ; Determine if the exe is still active
@@ -172,9 +171,10 @@ HookToWindowEvents()
                     }
                 }
         }
-
-        ; Success
-        return 1
+        
+        ; ! Has side-effect; eg. create a new window by copying a tab out of a window (= eg. browser-tab) - more?
+        ; Todo: Call-Next-Hook?
+        return
     }
 }
 
@@ -199,9 +199,9 @@ SetupAutoMove()
     ; Params
     static AM_PRIORITY := 1
     static AM_TARGET := "LButton" ; Todo: Make user-config + change with WASD?
-    static AM_SLEEP := Integer(P2ESettings.AutoMove.Sleep)
-    static AM_TOGGLE_HK := P2ESettings.AutoMove.Toggle
-    static AM_INTERRUPT_HK := P2ESettings.AutoMove.Interrupt
+    static AM_SLEEP := Integer(GetActiveProfile().AutoMove.Sleep)
+    static AM_TOGGLE_HK := GetActiveProfile().AutoMove.Toggle
+    static AM_INTERRUPT_HK := GetActiveProfile().AutoMove.Interrupt
 
     ; Validate
     if (AM_SLEEP > 0)
@@ -211,7 +211,7 @@ SetupAutoMove()
     else if (AM_SLEEP == 0)
     {
         hardFallBackValue := 500
-        P2ESettings.AutoMove.Sleep := 500
+        GetActiveProfile().AutoMove.Sleep := 500
         AM_SLEEP := -1 * hardFallBackValue
     }
     
@@ -238,7 +238,7 @@ SetupAutoMove()
         }
         
         ; Call potential other hooks
-        return CallNextHookExA(nCode, event, lParam)
+        return CallNextHookEx(nCode, event, lParam)
     }
 
     ; Send LButton-Down if appropriate
@@ -321,11 +321,10 @@ SetupAutoFire()
     global AF_Hotkeys
     global AF_TimeTracking
     global AF_Active
-    global P2ESettings
 
     ; Vars
-    static AF_Hotkey := P2ESettings.AutoFire.BoundTo
-    for hk in P2ESettings.AutoFire.Hotkeys
+    static AF_Hotkey := GetActiveProfile().AutoFire.BoundTo
+    for hk in GetActiveProfile().AutoFire.Hotkeys
     {
         ; Only active ones
         if (hk.Active)
@@ -346,7 +345,7 @@ SetupAutoFire()
                 _hotkey.Delay := 0
             }
             
-            ; Finaly
+            ; Finally
             AF_Hotkeys.Push(_hotkey)
         }
     }
@@ -359,6 +358,27 @@ SetupAutoFire()
     ; Hotkeys only during exe scope
     HotIf (*) => ExeIsActive
 
+        static DynHotkeyLookUp := Map()
+
+        ; Also setup hotkey to listen for manual time-changes
+        for hk in AF_Hotkeys
+        {
+            Hotkey("~" hk.Key, AutoFire_Hotkey_Dynamic, "On")
+            AutoFire_Hotkey_Dynamic(hotkeyName)
+            {
+                global AF_TimeTracking
+
+                ; Update the next firetime
+                idx := DynHotkeyLookUp[hotkeyName]
+                AF_TimeTracking[idx] := A_TickCount + AF_Hotkeys[idx].Cooldown
+            }
+            DynHotkeyLookUp["~" hk.Key] := A_Index
+            ActiveHotkeys.Push({Hotkey: "~" hk.Key, Callback: AutoFire_Hotkey_Dynamic})
+        }
+
+    ; Hotkeys only during exe scope
+    HotIf (*) => ExeIsActive
+
         ; AF Toggle
         Hotkey("~" AF_Hotkey, AutoFire_Hotkey_Toggle, "On")
         AutoFire_Hotkey_Toggle(*)
@@ -366,7 +386,7 @@ SetupAutoFire()
             global AF_Active 
             AutoFire_SetLoop(!AF_Active)
         }
-        ActiveHotkeys.Push({Hotkey: AF_Hotkey, Callback: AutoFire_Hotkey_Toggle})
+        ActiveHotkeys.Push({Hotkey: "~" AF_Hotkey, Callback: AutoFire_Hotkey_Toggle})
 
     ; Remove scope
     HotIf
@@ -482,13 +502,13 @@ BootFeatures()
 
     ; * AutoMove
     AM_Active := false
-    AM_IncludeAF := P2ESettings.AutoMove.IncludeAutoFire
-    if (P2ESettings.AutoMove.Enable)
+    AM_IncludeAF := GetActiveProfile().AutoMove.IncludeAutoFire
+    if (GetActiveProfile().AutoMove.Enable)
         SetupAutoMove()
 
     ; * AutoFire
     AF_Active := false
-    if (P2ESettings.AutoFire.Enable)
+    if (GetActiveProfile().AutoFire.Enable)
         SetupAutoFire()
 
     ; * Show
@@ -496,7 +516,7 @@ BootFeatures()
         FindGui()
 }
 
-; Unloads all feautres and boots them up again
+; Unloads all features and boots them up again
 Reload(*) 
 {
     global ActiveHooks
@@ -550,10 +570,10 @@ SetWindowsHookExA(idHook, lpfn, dwThreadId := 0)
         "int", idHook,
         "Ptr", lpfn, 
         "Ptr", DllCall("GetModuleHandle", "Ptr", 0, "Ptr"), 
-        "UInt", dwThreadId ; Todo: hook only to a given .EXE
+        "UInt", dwThreadId ; Todo: hook only to a given .EXE ?
     )
 
-    ; Remeber it
+    ; Remember it
     ActiveHooks.Push({
         Type: "WindowsHookExA",
         Ptr: Hook
@@ -562,7 +582,7 @@ SetWindowsHookExA(idHook, lpfn, dwThreadId := 0)
 }
 
 ; Calls the next hook via CallNextHookEx
-CallNextHookExA(nCode, wParam, lParam, hHook := 0)
+CallNextHookEx(nCode, wParam, lParam, hHook := 0)
 {
     Return DllCall(
         "CallNextHookEx", 
@@ -588,7 +608,7 @@ SetWindowsEventHook(event, lpfnWinEventProc, hmodWinEventProc := 0, idProcess :=
         "UInt", dwflags 
     )
 
-    ; Remeber it
+    ; Remember it
     ActiveHooks.Push({
         Type: "WinEventHook",
         Ptr: Hook

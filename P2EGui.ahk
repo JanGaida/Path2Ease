@@ -76,19 +76,23 @@ Tray.Default := "Open GUI"
 
 FindOrHide(*)
 {
-    if WinExist(Application.Name)
+    if WinExist(Application.Name) && WinExist("ahk_class AutoHotkeyGUI")
+    {
         WinHide(Application.Name)
+    }
     else
+    {
         FindGui()
+    }
 }
 
 FindGui(*)
 {
     global Application
  
-    if WinExist(Application.Name)
+    if WinExist(Application.Name) && WinExist("ahk_class AutoHotkeyGUI")
     {
-        WinActivate(Application.Name)
+        WinActivate()
     }
     else
     {
@@ -147,14 +151,14 @@ DisplayGui()
             Continue
         }
         textMenuItem := BaseGui.AddText("x0 y" (32*(A_Index-1) + Window_Tab.TabPaddingTop) " h32 w" Window_Tab.Width " +0x200 BackgroundTrans vMenuItem" . A_Index, Window_Tab.Spacer Window_Tab.Label[A_Index])
-        textMenuItem.SetFont(TextSize_Big " " Color_Gray, Text_Font) ; Set Font Options
+        textMenuItem.SetFont(TextSize_Big " " Color_Gray, Text_Font) ; Set font
         textMenuItem.OnEvent("Click", OnTabClick)
         textMenuItem.Index := A_Index
 
-        ; Hightligh the choosen one
+        ; Highlight the chosen one
         if (A_Index = 1) {
             textMenuItem.SetFont(Color_Blue " " TextSize_Big)
-            BaseGui.ActiceTab := textMenuItem
+            BaseGui.ActiveTab := textMenuItem
             ;BaseGui.TabTitle.Value := trim(textMenuItem.text)
         }
     }
@@ -179,8 +183,8 @@ DisplayGui()
     VolumeMutedPic.OnEvent("Click", (*) => OnSoundChange(true))
 
     ; Populate all Tabs
-    try
-    {
+    /*try
+    {*/
         SetupTab_AutoFire(1)
         SetupTab_AutoMove(2)
         SetupTab_Settings(4)
@@ -188,9 +192,12 @@ DisplayGui()
         MakeUnderConstructionTab(6)
         MakeUnderConstructionTab(7)
         MakeUnderConstructionTab(8)
-    }
+    /*}
     catch 
-    {}
+    {}*/
+
+    ; Finally show it
+    BaseGui.Show(" w" Window.Width " h" Window.Height "")
 
     ; References
     AutoFireVList := unset
@@ -221,8 +228,8 @@ DisplayGui()
         exeEdit.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         exeEdit.OnEvent("LoseFocus", (guiCtrlObj, info) => P2ESettings.General.TargetedExe := guiCtrlObj.Value)
         
-        ; Behaviour
-        generalH := BaseGui.AddText(Window_Tab.TabX0 " yp45 " Window_Tab.TabW " h32", Text_Pointer "Behaviour:")
+        ; Behavior
+        generalH := BaseGui.AddText(Window_Tab.TabX0 " yp45 " Window_Tab.TabW " h32", Text_Pointer "Behavior:")
         generalH.SetFont(Color_DBlue " bold " TextSize_Big, Text_Font)
         
         mStartChk := BaseGui.AddCheckbox("xp15 yp24 h32 w160", "Start minimized")
@@ -254,29 +261,29 @@ DisplayGui()
         autoFireTxtCfg := BaseGui.AddText(Window_Tab.TabX0 " " Window_Tab.TabY0 " " Window_Tab.TabW " h32", Text_Pointer "Configuration:")
         autoFireTxtCfg.SetFont(Color_DBlue " bold " TextSize_Big, Text_Font)
         autoFireCkUse := BaseGui.AddCheckbox("xp15 yp24 h32 " Window_Tab.TabW, "Enable AutoFire")
-        autoFireCkUse.Value := P2ESettings.AutoFire.Enable
+        autoFireCkUse.Value := GetActiveProfile().AutoFire.Enable
         autoFireCkUse.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoFireCkUse.OnEvent("Click", (guiCtrlObj, info) => P2ESettings.AutoFire.Enable := guiCtrlObj.Value)
+        autoFireCkUse.OnEvent("Click", (guiCtrlObj, info) => GetActiveProfile().AutoFire.Enable := guiCtrlObj.Value)
 
         ; Options
         autoFireTxtCfg := BaseGui.AddText(Window_Tab.TabX0 " yp36 h32 " Window_Tab.TabW , Text_Pointer "Options:")
         autoFireTxtCfg.SetFont(Color_DBlue " bold " TextSize_Big, Text_Font)
         autoFireDescBoundTo := BaseGui.AddText("xp35 yp28 h32 w120", "BoundTo-Hotkey:")
         autoFireDescBoundTo.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoFireEditBoundTo := BaseGui.AddEdit("xp125 yp0 w120 h23", P2ESettings.AutoFire.BoundTo)
+        autoFireEditBoundTo := BaseGui.AddEdit("xp125 yp0 w120 h23", GetActiveProfile().AutoFire.BoundTo)
         autoFireEditBoundTo.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoFireEditBoundTo.OnEvent("LoseFocus", (guiCtrlObj, info) => P2ESettings.AutoFire.BoundTo := guiCtrlObj.Value)
+        autoFireEditBoundTo.OnEvent("LoseFocus", (guiCtrlObj, info) => GetActiveProfile().AutoFire.BoundTo := guiCtrlObj.Value)
         
         autoFireHelpBoundTo := BaseGui.AddPicture("xp125 yp1 h20 w20", Image_CircledQuestionmark)
-        autoFireHelpBoundTo.Tooltip := "The hotkey to bind the AutoFire-Hotkeys too.`n`nIf it gets pressed, all AutoFire-Hotkeys will be immediately evaluted`nand fired in accordance to their time schedule.`n`nDoubleclick to open the AHK-Documentation with all available hotkeys."
+        autoFireHelpBoundTo.Tooltip := "The hotkey to bind the AutoFire-Hotkeys too.`n`nIf it gets pressed, all AutoFire-Hotkeys will be immediately evaluated`nand fired in accordance to their time schedule.`n`nDoubleclick to open the AHK-Documentation with all available hotkeys."
         autoFireHelpBoundTo.OnEvent("DoubleClick", OpenAutoHotkeyV2Doc)
         autoFireDescToggle := BaseGui.AddText("x" Window_Tab.Width + Window_Tab.TabLeftPadding + 48 " yp28 h32 w120", "Toggle-Hotkey:")
         autoFireDescToggle.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoFireEditToggle := BaseGui.AddEdit("xp112 yp0 w120 h23", P2ESettings.AutoFire.Toggle)
+        autoFireEditToggle := BaseGui.AddEdit("xp112 yp0 w120 h23", GetActiveProfile().AutoFire.Toggle)
         autoFireEditToggle.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoFireEditToggle.OnEvent("LoseFocus", (guiCtrlObj, info) => P2ESettings.AutoFire.Toggle := guiCtrlObj.Value)
+        autoFireEditToggle.OnEvent("LoseFocus", (guiCtrlObj, info) => GetActiveProfile().AutoFire.Toggle := guiCtrlObj.Value)
         autoFireHelpToggle := BaseGui.AddPicture("xp125 yp2 h20 w20", Image_CircledQuestionmark)
-        autoFireHelpToggle.Tooltip := "Toggles the usage of the hotkeys independlty.`n`n-  ON : BoundTo-Hotkey will be considred `n- OFF : BoundTo-Hotkey will be ignored`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
+        autoFireHelpToggle.Tooltip := "Toggles the usage of the hotkeys independently.`n`n-  ON : BoundTo-Hotkey will be considered `n- OFF : BoundTo-Hotkey will be ignored`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
         autoFireHelpToggle.OnEvent("DoubleClick", OpenAutoHotkeyV2Doc)
 
         ; ListView
@@ -286,7 +293,8 @@ DisplayGui()
         AutoFire_ListView_Draw()
         AutoFireVList.LeftMargin := "20"
         AutoFireVList.BottomMargin := "50"
-        AutoFireVList.OnEvent("ItemCheck", (guiCtrlObj, idx, checked) => P2ESettings.AutoFire.Hotkeys[idx].Active := checked)
+        AutoFireVList.OnEvent("ItemCheck", (guiCtrlObj, idx, checked) => GetActiveProfile().AutoFire.Hotkeys[idx].Active := checked)
+        AutoFireVList.OnEvent("DoubleClick", OnDoubleClick_AutoFireVList)
         
         ; Buttons
         autoFireBtnAdd := BaseGui.AddButton("x" (Window.Width - 330) " w120 h28 vButtonCAdd", Text_AddIcon "Add")
@@ -303,10 +311,9 @@ DisplayGui()
         autoFireBtnRmv.BottomDistance := 10
 
         ; Events
-        AutoFireVList.OnEvent("DoubleClick", OnDoubleClick_AutoFireVList)
-        autoFireBtnAdd.OnEvent("Click", OnClick_AddAutofire)
-        autoFireBtnEdit.OnEvent("Click", OnClick_EditAutofire)
-        autoFireBtnRmv.OnEvent("Click", OnClick_RemoveAutofire)
+        autoFireBtnAdd.OnEvent("Click", OnClick_AddAutoFire)
+        autoFireBtnEdit.OnEvent("Click", OnClick_EditAutoFire)
+        autoFireBtnRmv.OnEvent("Click", OnClick_RemoveAutoFire)
 
         AutoFire_ListView_Draw()
         {
@@ -331,7 +338,7 @@ DisplayGui()
             }
 
             ; Loop
-            for hotkey in P2ESettings.AutoFire.Hotkeys {
+            for hotkey in GetActiveProfile().AutoFire.Hotkeys {
                 options := "Checked"
                 if (hotkey.Active == 1)
                 {
@@ -358,7 +365,7 @@ DisplayGui()
             AutoFireVList.Opt("+Redraw")
         }
 
-        OnClick_AddAutofire(*)
+        OnClick_AddAutoFire(*)
         {
             global PopUp_AutoFire
             
@@ -374,10 +381,10 @@ DisplayGui()
                     Delay: "0"
                 }
             }
-            ShowPopUp_Autofire()
+            AutoFire_DisplayPopup()
         }
         
-        OnClick_EditAutofire(*)
+        OnClick_EditAutoFire(*)
         {
             global AutoFireVList
             global P2ESettings
@@ -386,11 +393,11 @@ DisplayGui()
             selectionIdx := AutoFireVList.GetNext()
             if (selectionIdx == 0)
             {
-                warnMsg := MsgBox("You havn't selected an entry.", "Warning", "OK Icon! 0x1000")
+                warnMsg := MsgBox("You haven't selected an entry.", "Warning", "OK Icon! 0x1000")
             }
             else
             {
-                hotkey := P2ESettings.AutoFire.Hotkeys[selectionIdx]
+                hotkey := GetActiveProfile().AutoFire.Hotkeys[selectionIdx]
                 PopUp_AutoFire := {
                     Mode_Add: 0,
                     Mode_Edit: 1,
@@ -403,11 +410,11 @@ DisplayGui()
                         Delay: hotkey.Delay
                     }
                 }
-                ShowPopUp_Autofire()
+                AutoFire_DisplayPopup()
             }
         }
 
-        OnClick_RemoveAutofire(*)
+        OnClick_RemoveAutoFire(*)
         {
             global AutoFireVList
             global P2ESettings
@@ -416,13 +423,13 @@ DisplayGui()
             selectionIdx := AutoFireVList.GetNext()
             if (selectionIdx == 0)
             {
-                warnMsg := MsgBox("You havn't selected an entry.", "Warning", "OK Icon! 0x1000")
+                warnMsg := MsgBox("You haven't selected an entry.", "Warning", "OK Icon! 0x1000")
             }
             else
             {
-                if ("Yes" == MsgBox("Are you sure to delete Hotkey '" P2ESettings.AutoFire.Hotkeys[selectionIdx].Name "' ?", "Confirmation required", "Icon? YesNo"))
+                if ("Yes" == MsgBox("Are you sure to delete Hotkey '" GetActiveProfile().AutoFire.Hotkeys[selectionIdx].Name "' ?", "Confirmation required", "Icon? YesNo"))
                 {
-                    P2ESettings.AutoFire.Hotkeys.RemoveAt(selectionIdx, 1)
+                    GetActiveProfile().AutoFire.Hotkeys.RemoveAt(selectionIdx, 1)
                     AutoFire_ListView_Draw()
                 }
             }
@@ -435,11 +442,11 @@ DisplayGui()
             selectionIdx := AutoFireVList.GetNext()
             if (selectionIdx != 0)
             {
-                OnClick_EditAutofire()
+                OnClick_EditAutoFire()
             }
         }
-
-        ShowPopUp_Autofire(*)
+        
+        AutoFire_DisplayPopup(*)
         {
             global P2ESettings
             global PopUp_AutoFire
@@ -471,7 +478,7 @@ DisplayGui()
                 createBtn.SetFont(TextSize_Normal, Text_Font)
                 createBtn.BottomDistance := 15
                 createBtn.LeftDistance := 115
-                createBtn.OnEvent("Click", OnPopUpClick_AddAutofire)
+                createBtn.OnEvent("Click", OnPopUpClick_AddAutoFire)
             }
             else ;if (PopUp_AutoFire.Mode_Edit)
             {
@@ -480,13 +487,13 @@ DisplayGui()
                 editBtn.SetFont(TextSize_Normal, Text_Font)
                 editBtn.BottomDistance := 15
                 editBtn.LeftDistance := 115
-                editBtn.OnEvent("Click", OnPopUpClick_EditAutofire)
+                editBtn.OnEvent("Click", OnPopUpClick_EditAutoFire)
             }
             cancelBtn := AutoFirePopUp_Gui.AddButton("w80 h28", "Cancel")
             cancelBtn.SetFont(TextSize_Normal, Text_Font)
             cancelBtn.BottomDistance := 15
             cancelBtn.LeftDistance := 25
-            cancelBtn.OnEvent("Click", OnPopUpClick_CancelAutofire)
+            cancelBtn.OnEvent("Click", OnPopUpClick_CancelAutoFire)
             
             ; Inputs
             nameDesc := AutoFirePopUp_Gui.AddText("ym10 xm45 h30 w100", "Name:")
@@ -531,40 +538,42 @@ DisplayGui()
             delayHelp := AutoFirePopUp_Gui.AddPicture("xp58 yp2 h20 w20", Image_CircledQuestionmark)
             delayHelp.Tooltip := "The time to wait only until the first triggers of this AutoFire-Hotkey in milliseconds once.`n`n-      150 ms = 0.15 s`n-   1 500 ms = 1.5 s`n- 10 500 ms = 10.5 s"
 
-            OnPopUpClick_AddAutofire(*)
+            OnPopUpClick_AddAutoFire(*)
             {
                 global P2ESettings
     
-                P2ESettings.AutoFire.Hotkeys.Push {
-                    Active: activeCBox.Value,
-                    Name: nameEdit.Value,
-                    Hotkey: hotkeyEdit.Value,
-                    Cooldown: cooldownEdit.Value,
-                    Delay: delayEdit.Value
-                }
+                GetActiveProfile().AutoFire.Hotkeys.Push(
+                    {
+                        Active: activeCBox.Value,
+                        Name: nameEdit.Value,
+                        Hotkey: hotkeyEdit.Value,
+                        Cooldown: cooldownEdit.Value,
+                        Delay: delayEdit.Value
+                    }
+                )
                 AutoFire_ListView_Draw()
-    
+
                 AutoFirePopUp_Gui.Hide()
                 BaseGui.Show()
             }
     
-            OnPopUpClick_EditAutofire(*)
+            OnPopUpClick_EditAutoFire(*)
             {
                 global P2ESettings
                 global PopUp_AutoFire
                 
-                P2ESettings.AutoFire.Hotkeys[PopUp_AutoFire.Idx].Active := activeCBox.Value
-                P2ESettings.AutoFire.Hotkeys[PopUp_AutoFire.Idx].Name := nameEdit.Value
-                P2ESettings.AutoFire.Hotkeys[PopUp_AutoFire.Idx].Hotkey := hotkeyEdit.Value
-                P2ESettings.AutoFire.Hotkeys[PopUp_AutoFire.Idx].Cooldown := cooldownEdit.Value
-                P2ESettings.AutoFire.Hotkeys[PopUp_AutoFire.Idx].Delay := delayEdit.Value
+                GetActiveProfile().AutoFire.Hotkeys[PopUp_AutoFire.Idx].Active := activeCBox.Value
+                GetActiveProfile().AutoFire.Hotkeys[PopUp_AutoFire.Idx].Name := nameEdit.Value
+                GetActiveProfile().AutoFire.Hotkeys[PopUp_AutoFire.Idx].Hotkey := hotkeyEdit.Value
+                GetActiveProfile().AutoFire.Hotkeys[PopUp_AutoFire.Idx].Cooldown := cooldownEdit.Value
+                GetActiveProfile().AutoFire.Hotkeys[PopUp_AutoFire.Idx].Delay := delayEdit.Value
 
                 AutoFire_ListView_Draw()
                 AutoFirePopUp_Gui.Hide()
                 BaseGui.Show()
             }
     
-            OnPopUpClick_CancelAutofire(*)
+            OnPopUpClick_CancelAutoFire(*)
             {
                 AutoFirePopUp_Gui.Hide()
                 FindGui()
@@ -572,7 +581,7 @@ DisplayGui()
     
             PopUpOnExit(*)
             {
-                OnPopUpClick_CancelAutofire()
+                OnPopUpClick_CancelAutoFire()
             }
             
             ; Finally show it
@@ -593,59 +602,56 @@ DisplayGui()
         autoMoveTxtCfg.SetFont(Color_DBlue " bold " TextSize_Big, Text_Font)
         autoMoveCkUse := BaseGui.AddCheckbox("xp15 yp24 h32 " Window_Tab.TabW, "Enable AutoMove")
         autoMoveCkUse.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveCkUse.Value := P2ESettings.AutoMove.Enable
-        autoMoveCkUse.OnEvent("Click", (guiCtrlObj, info) => P2ESettings.AutoMove.Enable := guiCtrlObj.Value)
+        autoMoveCkUse.Value := GetActiveProfile().AutoMove.Enable
+        autoMoveCkUse.OnEvent("Click", (guiCtrlObj, info) => GetActiveProfile().AutoMove.Enable := guiCtrlObj.Value)
 
         ; Options
         autoMoveTxtCfg := BaseGui.AddText(Window_Tab.TabX0 " yp36 h32 " Window_Tab.TabW , Text_Pointer "Options:")
         autoMoveTxtCfg.SetFont(Color_DBlue " bold " TextSize_Big, Text_Font)
         autoMoveDescToggle := BaseGui.AddText("xp48 yp28 h32 w120", "Toggle-Hotkey:")
         autoMoveDescToggle.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveEditToggle := BaseGui.AddEdit("xp111 yp0 w120 h23", P2ESettings.AutoMove.Toggle)
+        autoMoveEditToggle := BaseGui.AddEdit("xp111 yp0 w120 h23", GetActiveProfile().AutoMove.Toggle)
         autoMoveEditToggle.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveEditToggle.OnEvent("LoseFocus", (guiCtrlObj, info) => P2ESettings.AutoMove.Toggle := guiCtrlObj.Value)
+        autoMoveEditToggle.OnEvent("LoseFocus", (guiCtrlObj, info) => GetActiveProfile().AutoMove.Toggle := guiCtrlObj.Value)
         
         autoMoveHelpToggle := BaseGui.AddPicture("xp125 yp2 h20 w20", Image_CircledQuestionmark)
-        autoMoveHelpToggle.Tooltip := "Toggles the usage of the automove independlty.`n`n-  ON : AutoMove will press LMB permanently `n- OFF : AutoMove is not active`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
+        autoMoveHelpToggle.Tooltip := "Toggles the usage of the automove independently.`n`n-  ON : AutoMove will press LMB permanently `n- OFF : AutoMove is not active`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
         autoMoveHelpToggle.OnEvent("DoubleClick", OpenAutoHotkeyV2Doc)
         
         autoMoveDescIntr := BaseGui.AddText("xm197 yp27 h32 w120", "Interrupt-Hotkey:")
         autoMoveDescIntr.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveEditIntr := BaseGui.AddEdit("xp122 yp0 w120 h23", P2ESettings.AutoMove.Interrupt)
+        autoMoveEditIntr := BaseGui.AddEdit("xp122 yp0 w120 h23", GetActiveProfile().AutoMove.Interrupt)
         autoMoveEditIntr.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveEditIntr.OnEvent("LoseFocus", (guiCtrlObj, info) => P2ESettings.AutoMove.Interrupt := guiCtrlObj.Value)
+        autoMoveEditIntr.OnEvent("LoseFocus", (guiCtrlObj, info) => GetActiveProfile().AutoMove.Interrupt := guiCtrlObj.Value)
         
         autoMoveHelpIntr := BaseGui.AddPicture("xp125 yp2 h20 w20", Image_CircledQuestionmark)
-        autoMoveHelpIntr.Tooltip := "Interrups AutoMove temporarily while pressed.`n`n-  ON : AutoMove will act as if it was toggled-off `n- OFF : AutoMove works as specified`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
+        autoMoveHelpIntr.Tooltip := "Interrupts AutoMove temporarily while pressed.`n`n-  ON : AutoMove will act as if it was toggled-off `n- OFF : AutoMove works as specified`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
         autoMoveHelpIntr.OnEvent("DoubleClick", OpenAutoHotkeyV2Doc)
         
         autoMoveDescIntrSl := BaseGui.AddText("xm204 yp27 h32 w120", "Interrupt-Sleep:")
         autoMoveDescIntrSl.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveEditIntrSl := BaseGui.AddEdit("xp114 yp0 w60 h23", P2ESettings.AutoMove.Sleep)
+        autoMoveEditIntrSl := BaseGui.AddEdit("xp114 yp0 w60 h23", GetActiveProfile().AutoMove.Sleep)
         autoMoveEditIntrSl.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         
         autoMoveEditIntrSlUnit := BaseGui.AddText("yp0 xp65 h30 w100", " in ms")
         autoMoveEditIntrSlUnit.SetFont(Color_Gray " " TextSize_Normal, Text_Font)
         autoMoveHelpIntrS := BaseGui.AddPicture("xp47 yp2 h20 w20", Image_CircledQuestionmark)
-        autoMoveHelpIntrS.Tooltip := "Interrups AutoMove temporarily while pressed.`n`n-  ON : AutoMove will act as if it was toggled-off `n- OFF : AutoMove works as specified`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
+        autoMoveHelpIntrS.Tooltip := "Interrupts AutoMove temporarily while pressed.`n`n-  ON : AutoMove will act as if it was toggled-off `n- OFF : AutoMove works as specified`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
         
         autoMoveDescInclAf := BaseGui.AddText("xm199 yp27 h32 w120", "Include AutoFire:")
         autoMoveDescInclAf.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         autoMoveInclAf := BaseGui.AddCheckbox("xp120 ym175 h32 w22", "")
         autoMoveInclAf.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        autoMoveInclAf.Value := P2ESettings.AutoMove.IncludeAutoFire
-        autoMoveInclAf.OnEvent("Click", (guiCtrlObj, info) => P2ESettings.AutoMove.IncludeAutoFire := guiCtrlObj.Value)
+        autoMoveInclAf.Value := GetActiveProfile().AutoMove.IncludeAutoFire
+        autoMoveInclAf.OnEvent("Click", (guiCtrlObj, info) => GetActiveProfile().AutoMove.IncludeAutoFire := guiCtrlObj.Value)
         
         autoMoveHelpInclAf := BaseGui.AddPicture("xp22 yp5 h20 w20", Image_CircledQuestionmark)
-        autoMoveHelpInclAf.Tooltip := "Toggles the usage of the automove independlty.`n`n-  ON : AutoMove will press LMB permanently `n- OFF : AutoMove is not active`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
+        autoMoveHelpInclAf.Tooltip := "Toggles the usage of the automove independently.`n`n-  ON : AutoMove will press LMB permanently `n- OFF : AutoMove is not active`n`nDoubleclick to open the AHK-Documentation with all available hotkeys"
     }
 
     SetupTab_Profiles(tabIdx)
     {
         static ProfileLV
-
-        P2ESettings.Profile := Object()
-        P2ESettings.General.ActiveProfile := "Todo:ActiveProfile"
         
         ; Render
         Tab.UseTab(tabIdx)
@@ -657,39 +663,385 @@ DisplayGui()
         ; Current
         currentText := BaseGui.AddText("xp48 yp28 " Window_Tab.TabW " h32", "Active:")
         currentText.SetFont(Color_Black " " TextSize_Normal, Text_Font)
-        currentEdit := BaseGui.AddEdit("xp57 yp0 w280 ReadOnly", P2ESettings.General.ActiveProfile)
-        currentEdit.SetFont(Color_Black " " TextSize_Normal, Text_Font)
+        CurrentEdit := BaseGui.AddEdit("xp57 yp0 w280 ReadOnly", GetActiveProfile().ProfileSettings.Name)
+        CurrentEdit.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         
         ; List
-        ProfileLV := BaseGui.AddListView("x" (Window_Tab.Width + 48) " ym75 -Multi NoSort NoSortHdr -WantF2 -LV0x10 Grid", ["Profilename", "Description", "Created"])
-        ProfileLV.SetFont(Color_Black " " TextSize_Normal, Text_Font)
+        Profile_TableColumns := ["Name", "Description", "Created"]
+        ProfileLV := BaseGui.AddListView("x" (Window_Tab.Width + 48) " ym75 Checked -Multi NoSort NoSortHdr -WantF2 -LV0x10 Grid", Profile_TableColumns)
         ProfileLV.LeftMargin := "20"
         ProfileLV.BottomMargin := "50"
+        ProfileLV.OnEvent("ItemCheck", (guiCtrlObj, idx, checked) => Profile_SetActive(idx))
+        ProfileLV.OnEvent("DoubleClick", (guiCtrlObj, idx) => Profile_Edit(idx))
         Profile_ListView_Draw()
 
         ; Buttons
         profileUp := BaseGui.AddButton("x" (Window_Tab.Width + 15) " ym100 h28", "⇧")
         profileUp.SetFont(Color_Black " bold " TextSize_Normal, Text_Font)
+        profileUp.OnEvent("Click", (*) => Profile_Move(true))
 
         profileDown := BaseGui.AddButton("x" (Window_Tab.Width + 15) " ym135 h28", "⇩")
         profileDown.SetFont(Color_Black " bold " TextSize_Normal, Text_Font)
+        profileDown.OnEvent("Click", (*) => Profile_Move(false))
 
         profileAdd := BaseGui.AddButton("x" (Window.Width - 330) " w120 h28", Text_AddIcon "Add")
         profileAdd.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         profileAdd.LeftDistance := 30 + 2 * 135
         profileAdd.BottomDistance := 10
+        profileAdd.OnEvent("Click", Profile_Add)
+
         profileEdit := BaseGui.AddButton("x" (Window.Width - 300) " w120 h28", Text_EditIcon "Edit")
         profileEdit.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         profileEdit.LeftDistance := 30 + 1 * 135
         profileEdit.BottomDistance := 10
+        profileEdit.OnEvent("Click", (guiCtrlObj, idx) => Profile_Edit(idx))
+        
         profileRmv := BaseGui.AddButton("x" (Window.Width - 90) " w120 h28", Text_RmvIcon "Remove")
         profileRmv.SetFont(Color_Black " " TextSize_Normal, Text_Font)
         profileRmv.LeftDistance := 30
         profileRmv.BottomDistance := 10
-
+        profileRmv.OnEvent("Click", Profile_Delete)
+        
         Profile_ListView_Draw()
         {
-            ProfileLV.ModifyCol
+            global P2ESettings
+            
+            ; Spacer
+            MinusSpacer := " - "
+            WsSpacer := " "
+            
+            ; Styling
+            ProfileLV.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+
+            ; Stop drawing
+            ProfileLV.Opt("-Redraw")
+    
+            ; Clear
+            if (ProfileLV.GetCount() != 0)
+                ProfileLV.Delete()
+
+            
+            ; Loop
+            for profile in P2ESettings.Profiles {
+                options := "Check"
+                activeIndex := Integer(P2ESettings.General.ActiveProfile)
+                if (activeIndex != A_Index)
+                {
+                    options := "-" options
+                }
+
+                ProfileLV.Add(options, 
+                    WsSpacer profile.ProfileSettings.Name WsSpacer,
+                    WsSpacer profile.ProfileSettings.Description WsSpacer,
+                    WsSpacer profile.ProfileSettings.Created WsSpacer,
+                )
+            }
+
+            ; Add FixtureHeader
+            ProfileLV.Add("", 
+                MinusSpacer Profile_TableColumns[1] MinusSpacer MinusSpacer MinusSpacer MinusSpacer, 
+                MinusSpacer Profile_TableColumns[2] MinusSpacer, 
+                MinusSpacer Profile_TableColumns[3] MinusSpacer
+            )
+            ProfileLV.ModifyCol  ; Auto-size each column to fit its contents.
+            ProfileLV.Delete(ProfileLV.GetCount())
+            
+            ; Draw
+            ProfileLV.Opt("+Redraw")
+        }
+
+        Profile_Move(up)
+        {
+            ; Get selection
+            selectionIdx := ProfileLV.GetNext()
+
+            ; Warn if nothing selected
+            if (selectionIdx == 0)
+            {
+                warnMsg := MsgBox("You haven't selected an entry.", "Confirm", "OK Icon! 0x1000")
+                return
+            }
+            
+            ; Can move?
+            if ((up && selectionIdx == 1) || (!up && selectionIdx == P2ESettings.Profiles.Length))
+                return
+
+            ; Where to move
+            other := unset
+            if (up)
+                other := selectionIdx - 1
+            else
+                other := selectionIdx + 1
+
+            ; Also change selection?
+            if (selectionIdx == P2ESettings.General.ActiveProfile)
+                P2ESettings.General.ActiveProfile := other
+            else if (other == P2ESettings.General.ActiveProfile)
+                P2ESettings.General.ActiveProfile := selectionIdx
+
+            ; Act
+            P2ESettings.Profiles := SwapElements(P2ESettings.Profiles, selectionIdx, other)
+            Profile_ListView_Draw()
+            SaveSettings()
+
+            SwapElements(sourceAr, idx1, idx2)
+            {
+                ar := Array()
+
+                for e in sourceAr
+                {
+                    if (A_Index == idx1)
+                    {
+                        ar.Push(sourceAr[idx2])
+                    }
+                    else if (A_Index == idx2)
+                    {
+                        ar.Push(sourceAr[idx1])
+                    }
+                    else
+                    {
+                        ar.Push(e)
+                    }
+                }
+
+                return ar
+            }
+        }
+    
+        Profile_SetActive(idx)
+        {
+            global BaseGui
+            if (idx == P2ESettings.General.ActiveProfile)
+                return
+            
+            ; User confirm
+            Result := MsgBox("Would you like to switch Profile to '" CurrentEdit.Value "'?",, "YesNo")
+            if (Result == "No")
+            {
+                Profile_ListView_Draw()
+                return
+            }
+            
+            ; Set new idx
+            P2ESettings.General.ActiveProfile := idx
+            
+            ; Update all
+            BaseGui.Destroy()
+            DisplayGui()
+            Reload()
+        }
+
+        Profile_Delete(*)
+        {
+            ; Get selection
+            selectionIdx := ProfileLV.GetNext()
+
+            ; Warn if nothing selected
+            if (selectionIdx == 0)
+            {
+                MsgBox("You haven't selected an entry.", "Warning", "OK Icon! 0x1000")
+                return
+            }
+
+            ; Warn if active
+            if (selectionIdx == P2ESettings.General.ActiveProfile)
+            {
+                MsgBox("You need to swap the active profile first.", "Warning", "OK Icon! 0x1000")
+                return
+            }
+
+            ; Confirm
+            Result := MsgBox("Do you really want to delete '" P2ESettings.Profiles[selectionIdx].ProfileSettings.Name "'?",, "YesNo")
+            if (Result == "No")
+            {
+                return
+            }
+
+            ; Adjust active-idx
+            if (selectionIdx < P2ESettings.General.ActiveProfile)
+            {   
+                P2ESettings.General.ActiveProfile := P2ESettings.General.ActiveProfile - 1
+            }
+
+            ; Act
+            P2ESettings.Profiles.RemoveAt(selectionIdx)
+            Profile_ListView_Draw()
+            SaveSettings()
+        }
+
+        static ProfilePopupData := unset
+
+        Profile_Add(*)
+        {
+            ProfilePopupData := {
+                Name: "",
+                Description: "",
+                Created: "",
+                Idx: -1
+            }
+            Profile_DisplayPopup(false)
+        }
+
+        Profile_Edit(idx)
+        {
+            ProfilePopupData := {
+                Name: P2ESettings.Profiles[idx].ProfileSettings.Name,
+                Description: P2ESettings.Profiles[idx].ProfileSettings.Description,
+                Created: P2ESettings.Profiles[idx].ProfileSettings.Created,
+                Idx: idx
+            }
+            Profile_DisplayPopup(true)
+        }
+
+        Profile_DisplayPopup(isEdit)
+        {
+            global P2ESettings
+    
+            ; Window
+            PopUpWindow := {
+                Width: 400,
+                Height: 150
+            }
+            
+            ; Window-Events
+            OnMessage(0x0020, WM_SETCURSOR)
+            OnMessage(0x02A2, WM_NCMOUSELEAVE)
+
+            ; Setup Gui
+            PopUpGui := Gui()
+            PopUpGui.OnEvent("Escape", PopUp_OnExit)
+            PopUpGui.OnEvent("Close", PopUp_OnExit)
+            PopUpGui.OnEvent("Size", OnResize)
+            PopUpGui.Opt("+LastFound AlwaysOnTop -Resize -MaximizeBox -MinimizeBox MinSize" PopUpWindow.Width "x" PopUpWindow.Height)
+            PopUpGui.SetFont("" Color_Gray, Text_Font)
+            PopUpGui.BackColor := "FFFFFF"
+
+            ; Buttons
+            if (isEdit)
+            {
+                PopUpGui.Title := "Edit profile"
+                editBtn := PopUpGui.AddButton("w80 h28", Text_EditIcon "Edit")
+                editBtn.SetFont(TextSize_Normal, Text_Font)
+                editBtn.BottomDistance := 15
+                editBtn.LeftDistance := 115
+                editBtn.OnEvent("Click", PopUp_OnEdit)
+            }
+            else ;if (PopUp_AutoFire.Mode_Edit)
+            {
+                PopUpGui.Title := "Add a new profile"
+                createBtn := PopUpGui.AddButton("w80 h28", Text_AddIcon "Add")
+                createBtn.SetFont(TextSize_Normal, Text_Font)
+                createBtn.BottomDistance := 15
+                createBtn.LeftDistance := 115
+                createBtn.OnEvent("Click", PopUp_OnAdd)
+            }
+            cancelBtn := PopUpGui.AddButton("w80 h28", "Cancel")
+            cancelBtn.SetFont(TextSize_Normal, Text_Font)
+            cancelBtn.BottomDistance := 15
+            cancelBtn.LeftDistance := 25
+            cancelBtn.OnEvent("Click", PopUp_OnExit)
+            
+            nameDesc := PopUpGui.AddText("xm65 ym10 h23 w80", "Name:")
+            nameDesc.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+            nameEdit := PopUpGui.AddEdit("xm115 yp0 h23 w200", ProfilePopupData.Name)
+            nameEdit.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+
+            descDesc := PopUpGui.AddText("xm28 ym45 h23 w80", "Description:")
+            descDesc.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+            descEdit := PopUpGui.AddEdit("xm113 yp0 h23 w200", ProfilePopupData.Description)
+            descEdit.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+            
+            
+            if (!isEdit)
+            {
+                copyCk := PopUpGui.AddCheckbox("xm100 ym90 h23 w200", "Copy active profiles")
+                copyCk.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+                swapCk := PopUpGui.AddCheckbox("xm100 ym115 h23 w270", "Swap to the new profile after")
+                swapCk.SetFont(TextSize_Normal " " Color_Black, Text_Font)
+                swapCk.Value := true
+                PopUpWindow.Height := 205
+            }
+
+            ; Finally show it
+            BaseGui.Hide()
+            PopUpGui.Show(" w" PopUpWindow.Width " h" PopUpWindow.Height)
+
+            PopUp_OnAdd(*)
+            {
+                global P2ESettings
+
+                newProfile := Object()
+                newProfile.ProfileSettings := Object()
+                newProfile.ProfileSettings.Name := nameEdit.Value
+                newProfile.ProfileSettings.Description := descEdit.Value
+                newProfile.ProfileSettings.Created := A_DD "." A_MM "." A_YYYY
+
+                if (copyCk.Value)
+                {
+                    newProfile.AutoFire := GetActiveProfile().AutoFire
+                    newProfile.AutoMove := GetActiveProfile().AutoMove
+                }
+                else
+                {
+                    newProfile.AutoFire := Object()
+                    newProfile.AutoFire := {
+                        Enable: false,
+                        BoundTo: "LButton",
+                        Toggle: "F13",
+                        Hotkeys: Array()
+                    }
+                    newProfile.AutoMove := Object()
+                    newProfile.AutoMove := {
+                        Enable: false,
+                        Hotkey: "LButton",
+                        IncludeAutoFire: true,
+                        Interrupt: "XButton2",
+                        Sleep: "500",
+                        Toggle: "XButton1"
+                    }
+                }
+
+                ; Add
+                P2ESettings.Profiles.Push(newProfile)
+                SaveSettings()
+
+                ; Swap?
+                if (swap := swapCk.Value)
+                {
+                    P2ESettings.General.ActiveProfile := P2ESettings.Profiles.Length
+                    Reload()
+                }
+                else
+                {
+                    Profile_ListView_Draw()
+                }
+
+                ; Show
+                PopUpGui.Hide()
+                FindGui()
+            }
+
+            PopUp_OnEdit(*)
+            {
+                global P2ESettings
+                P2ESettings.Profiles[ProfilePopupData.Idx].ProfileSettings.Name := nameEdit.Value
+                P2ESettings.Profiles[ProfilePopupData.Idx].ProfileSettings.Description := descEdit.Value
+                SaveSettings()
+
+                ; Show
+                PopUpGui.Hide()
+                FindGui()
+
+                ; Refresh
+                Profile_ListView_Draw()
+            }
+
+            PopUp_OnExit(*)
+            {
+
+                PopUpGui.Hide()
+                FindGui()
+            }
         }
     }
 
@@ -701,8 +1053,6 @@ DisplayGui()
 
     MakeUnderConstructionTab(tabIdx)
     {
-        global P2ESettings
-
         ; Render
         Tab.UseTab(tabIdx)
         message := BaseGui.AddText(Window_Tab.TabX0 " y30 h32 " Window_Tab.TabW , "🚧 This tab is currently under construction.")
@@ -719,11 +1069,11 @@ DisplayGui()
         ; Unset focus
         guiCtrlObj.Focus()
         ; Remove current tab-highlighting
-        BaseGui.ActiceTab.SetFont(Color_Gray " " TextSize_Big)
+        BaseGui.ActiveTab.SetFont(Color_Gray " " TextSize_Big)
         ; Swap tab
         BaseGui.Tabs.Choose(trim(guiCtrlObj.text))
         ;thisGui.TabTitle.Value := trim(GuiCtrlObj.text)
-        BaseGui.ActiceTab := GuiCtrlObj
+        BaseGui.ActiveTab := GuiCtrlObj
         ; Apply tab-highlighting
         guiCtrlObj.SetFont(Color_Blue " " TextSize_Big)
         BaseGui.TabPicSelect.Move(0, (32*(GuiCtrlObj.Index-1) + Window_Tab.TabPaddingTop))
@@ -764,7 +1114,7 @@ DisplayGui()
         DllCall("LockWindowUpdate", "Uint", 0)
     }
 
-    /* # UI-EVENTCALLBACKS # */
+    /* # UI-EVENT-CALLBACKS # */
 
     __ToolTipShown := false
     WM_SETCURSOR(wParam, lParam, msg, hwnd)
@@ -788,7 +1138,7 @@ DisplayGui()
         ; MenuItem-hover
         if (InStr(guiCtrl.Name, "MenuItem"))
         {
-            if (guiCtrl != BaseGui.ActiceTab)
+            if (guiCtrl != BaseGui.ActiveTab)
             {
                 BaseGui.TabPicHover.Visible := true
                 BaseGui.TabPicHover.Move(0, (32 * (guiCtrl.Index-1) + Window_Tab.TabPaddingTop))
@@ -805,6 +1155,17 @@ DisplayGui()
             ToolTip(guiCtrl.ToolTip, X + 25, Y + 2)
             __ToolTipShown := true
         }
+        else
+        {
+            try
+            {
+                BaseGui.TabPicHover.Visible := false
+            }
+            catch 
+            {
+                ; Probably destroyed
+            }
+        }
     }
 
     WM_NCMOUSELEAVE(wParam, lParam, msg, hwnd)
@@ -812,12 +1173,16 @@ DisplayGui()
         if (__ToolTipShown := true)
         {
             __ToolTipShown := false
-            BaseGui.TabPicHover.Visible:= false
+            try
+            {
+                BaseGui.TabPicHover.Visible:= false
+            }
+            catch 
+            {
+                ; Probably destroyed
+            }
         }
     }
-
-    ; Finally show it
-    BaseGui.Show(" w" Window.Width " h" Window.Height "")
 }
 
 /* # API # */
